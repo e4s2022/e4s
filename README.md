@@ -1,6 +1,10 @@
 # E4S: Fine-grained Face Swapping via Regional GAN Inversion, CVPR 2023
 
-<a href='https://arxiv.org/abs/2211.14068'><img src='https://img.shields.io/badge/ArXiv-2211.14068-red'></a> &nbsp;&nbsp;&nbsp;<a href='https://e4s2022.github.io'><img src='https://img.shields.io/badge/Project-Page-Green'></a> &nbsp;&nbsp;&nbsp;[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](#) &nbsp;&nbsp;&nbsp;
+<a href='https://arxiv.org/abs/2211.14068'><img src='https://img.shields.io/badge/ArXiv-2211.14068-red'></a> &nbsp;&nbsp;&nbsp;<a href='https://e4s2022.github.io'><img src='https://img.shields.io/badge/Project-Page-Green'></a> &nbsp;&nbsp;&nbsp; [🤗Huggingface space](https://huggingface.co/Zhian) &nbsp;&nbsp;&nbsp; 
+
+ 
+
+[](https://huggingface.co/spaces/PAIR/PAIR-Diffusion)
 
 
 <a href="#">Zhian Liu<sup>1*</sup></a>&emsp;<a href="#">Maomao Li<sup>2*</sup></a>&emsp;<a href="https://yzhang2016.github.io">Yong Zhang<sup>2*</sup></a>&emsp;<a href="#">Cairong Wang<sup>3</sup></a>&emsp;<a href="https://qzhang-cv.github.io/">Qi Zhang<sup>2</sup></a>&emsp;<a href="https://juewang725.github.io/">Jue Wang<sup>2</sup></a>&emsp;<a href="https://nieyongwei.net/">Yongwei Nie<sup>1✉️</sup></a>
@@ -17,6 +21,7 @@
 
 
 ## 🧑‍💻 Changelog
+  - __[2023.04.16]__: Add face editing inference demo. 
 
   - __[2023.04.11]__: Add face swapping inference demo (continue updating). 
 
@@ -80,7 +85,7 @@ The reuslts will be saved to `example/output/faceswap` folder. Left to right: so
 <img src="./example/input/faceswap/source.jpg" width="256" height="256"><img src="./example/input/faceswap/target.jpg" width="256" height="256"><img src="./example/output/faceswap/swap_res.png" width="256" height="256">
 
 
-You can optionally provide the face parsing result of the target image via `--target_mask` arg, and turn on the `--verbose=True` for detailed visulize. The results will be saved in the `--output_dir` folder (default to `example/output/faceswap`). 
+You can optionally provide the face parsing result of the target image via `--target_mask` arg, and turn on the `--verbose=True` for detailed visulization. The results will be saved in the `--output_dir` folder (default to `example/output/faceswap`). 
 ```sh
 python scripts/face_swap.py \
       --source=./example/input/faceswap/source.jpg \
@@ -105,7 +110,10 @@ The reuslts will be saved to `example/output/faceedit` folder.
 
 <img src="./assets/gradio_UI.jpg" >
 
-For shape related editing, we provide an interactive editing demo that was build upon graido, just run `python demo/gradio_demo.py`.
+For shape related editing, we provide an interactive editing demo that was build upon graido, just run 
+```sh
+python demo/gradio_demo.py
+```
 
 
 TODO: 
