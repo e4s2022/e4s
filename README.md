@@ -41,7 +41,7 @@ We provide a pre-trained RGI model that was trained on FFHQ dataset for 300K ite
 ### 1.3 Other dependencies
 - face-parsing.PyTorch: [repo](https://github.com/zllrunning/face-parsing.PyTorch)
 
-Please download the pre-trained model [here](https://drive.google.com/file/d/1o1m-eT38zNCIFldcRaoWcLvvBtY8S4W3/view), and place it in the `pretrained_ckpts/face_parsing` folder.
+Please download the pre-trained model [here](https://drive.google.com/open?id=154JgKpzCPW82qINcVieuPH3fZ2e0P812), and place it in the `pretrained_ckpts/face_parsing` folder.
 
 > 💡 Hint: The following FaceVid2Vid and GPEN are only applied for face swapping. If noly face editing is needed, just skip to Section 2 directly.
 
@@ -73,25 +73,44 @@ sh ./fetch_gpen_models.sh
 ### 2.1 face swapping 
 #### Face swapping in defult settings:
 ```sh
-python scripts/face_swap.py --source=example/input/img/28063.jpg --target=example/input/img/28426.jpg
+python scripts/face_swap.py --source=example/input/faceswap/source.jpg --target=example/input/faceswap/target.jpg
 ```
 The reuslts will be saved to `example/output/faceswap` folder. Left to right: source, target, swapped face
 
-<img src="./example/input/img/28063.jpg" width="256" height="256"><img src="./example/input/img/28426.jpg" width="256" height="256"><img src="./example/output/faceswap/swap_28063_to_28426.png" width="256" height="256">
+<img src="./example/input/faceswap/source.jpg" width="256" height="256"><img src="./example/input/faceswap/target.jpg" width="256" height="256"><img src="./example/output/faceswap/swap_res.png" width="256" height="256">
 
 
 You can optionally provide the face parsing result of the target image via `--target_mask` arg, and turn on the `--verbose=True` for detailed visulize. The results will be saved in the `--output_dir` folder (default to `example/output/faceswap`). 
 ```sh
 python scripts/face_swap.py \
-      --source=input/img/28063.jpg \
-      --target=input/img/28426.jpg \
-      --target_mask=input/mask/28426.png \
+      --source=./example/input/faceswap/source.jpg \
+      --target=./example/input/faceswap/target.jpg \
+      --target_mask=./example/input/faceswap/target_mask.png \
       --verbose=True
 ```
 For more information and supported args, run `python scripts/face_swap.py -h` for help.
 
 ### 2.2 face editing 
-TBD
+For texture related editting or interpolation, run 
+```sh
+python scripts/face_edit.py \
+      --source=./example/input/faceedit/source.jpg \
+      --reference=./example/input/faceedit/reference.jpg \
+      --region hair eyes \
+      --alpha=1
+```
+
+The reuslts will be saved to `example/output/faceedit` folder. 
+
+
+<img src="./assets/gradio_UI.jpg" >
+
+For shape related editing, we provide an interactive editing demo that was build upon graido, just run `python demo/gradio_demo.py`.
+
+
+TODO: 
+- [ ] Share the gradio demo on Huggingface.
+- [ ] Privide the optimization script for better results.
 
 </details>
 

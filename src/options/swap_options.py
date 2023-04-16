@@ -26,8 +26,8 @@ class SwapFacePipelineOptions:
 		self.parser.add_argument('--checkpoint_path', default='./pretrained_ckpts/e4s/iteration_300000.pt', type=str, help='Path to E4S pre-trained model checkpoint')
 
 		# ================== input & output ==================
-		self.parser.add_argument('--source', type=str, default="example/input/img/28063.jpg",help='Path to the source image')
-		self.parser.add_argument('--target', type=str, default="example/input/img/28426.jpg",help='Path to the target image')
+		self.parser.add_argument('--source', type=str, default="example/input/faceswap/source.jpg",help='Path to the source image')
+		self.parser.add_argument('--target', type=str, default="example/input/faceswap/target.jpg",help='Path to the target image')
 		self.parser.add_argument('--target_mask', type=str, default="",help='Path to the target mask')
     	
 		self.parser.add_argument('--verbose', default=False, type=bool, help='Whether to show the intermediate results')

@@ -69,14 +69,14 @@ def paste_image(coeffs, img, orig_image):
 
 
 def smooth_face_boundry(image, dst_image, mask, radius=0, sigma=0.0):
-    # 把 image 贴到 dst_image 上去, 其中mask是 image内脸对应的mask
+    
     image_masked = image.copy().convert('RGBA')
     pasted_image = dst_image.copy().convert('RGBA')
     if radius != 0:
-        mask_np = np.array(mask) # mask 需要是 [0,255] 范围
+        mask_np = np.array(mask) 
         kernel_size = (radius * 2 + 1, radius * 2 + 1)
         kernel = np.ones(kernel_size)
-        eroded = cv2.erode(mask_np, kernel, borderType=cv2.BORDER_CONSTANT, borderValue=255)  # border 填0可能会导致图片的边界处mask 不太对
+        eroded = cv2.erode(mask_np, kernel, borderType=cv2.BORDER_CONSTANT, borderValue=255)  
         blurred_mask = cv2.GaussianBlur(eroded, kernel_size, sigmaX=sigma)
         blurred_mask = Image.fromarray(blurred_mask)
         image_masked.putalpha(blurred_mask)
@@ -97,7 +97,6 @@ def crop_and_align_face(target_files):
     print('Aligning images')
     crops, orig_images, quads = crop_faces(image_size, target_files, scale, center_sigma=center_sigma, xy_sigma=xy_sigma, use_fa=use_fa)
     
-    # crop的逆变换，用于后期贴回到原始视频上去
     inv_transforms = [
         calc_alignment_coefficients(quad + 0.5, [[0, 0], [0, image_size], [image_size, image_size], [image_size, 0]])
         for quad in quads
