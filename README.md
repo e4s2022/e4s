@@ -1,6 +1,7 @@
 # E4S: Fine-grained Face Swapping via Regional GAN Inversion, CVPR 2023
 
-<a href='https://arxiv.org/abs/2211.14068'><img src='https://img.shields.io/badge/ArXiv-2211.14068-red'></a> &nbsp;&nbsp;&nbsp;<a href='https://e4s2022.github.io'><img src='https://img.shields.io/badge/Project-Page-Green'></a> &nbsp;&nbsp;&nbsp; [🤗Huggingface space](https://huggingface.co/Zhian) &nbsp;&nbsp;&nbsp; 
+<a href='https://arxiv.org/abs/2211.14068'><img src='https://img.shields.io/badge/ArXiv-2211.14068-red'></a> &nbsp;&nbsp;&nbsp;<a href='https://e4s2022.github.io'><img src='https://img.shields.io/badge/Project-Page-Green'></a> &nbsp;&nbsp;&nbsp; 
+[![Huggingface space](https://img.shields.io/badge/🤗-Huggingface%20Space-cyan.svg)](https://huggingface.co/Zhian) &nbsp;&nbsp;&nbsp; 
 
  
 
