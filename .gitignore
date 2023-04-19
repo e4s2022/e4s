@@ -5,8 +5,10 @@
 **/*.pth.tar
 
 **/__pycache__/
-
+data
 
 .vscode/
 
 flagged
+
+!./pretrained_ckpts/auxiliray/model.pth

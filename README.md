@@ -119,7 +119,7 @@ python demo/gradio_demo.py
 
 TODO: 
 - [ ] Share the gradio demo on Huggingface.
-- [ ] Privide the optimization script for better results.
+- [x] Privide the optimization script for better results.
 
 </details>
 
@@ -194,8 +194,17 @@ For more information and supported args, run ` python scripts/train.py -h` for h
 </details>
 
 ## <details><summary>4. Optimization</summary>
+For a specific face, applying an optimization stage would always produce better texture code, run:
+```sh
+python scripts/optimization.py --save_intermediate --verbose 
+```
 
+The optimzed texture code and the intermediate visulization results will be saved at `/work_dir/optim`, i.e., `--output_dir` option. Please feel free to change the step number of optimization, i.e.,`--W_steps`.
+
+You can also specify your pre-trained RGI model via `--checkpoint_path` option, which is set to `./pretrained_ckpts/e4s/iteration_30000.pt` by default.
 </details>
+
+
 ## 🔗 Citation
 If you find our work useful in your research, please consider citing:
 ```
@@ -212,4 +221,4 @@ If you find our work useful in your research, please consider citing:
 
 Code borrows heavily from [PSP](https://github.com/eladrich/pixel2style2pixel), [SEAN](https://github.com/ZPdesu/SEAN). We thank the authors for sharing their wonderful codebase.
 
-### Related repositories:
+<!-- ### Related repositories: -->
