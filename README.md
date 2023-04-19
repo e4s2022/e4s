@@ -123,10 +123,44 @@ TODO:
 
 </details>
 
-## <details><summary>3. Train </summary>
+## <details><summary>3. Train</summary>
+
 If you plan to train the model from scratch, you will need to do a bit more stuffs. Machine with multiple GPUs is recommanded for the training.
 
 ### 3.1 dataset
+Please download the [CelebAMask-HQ](https://github.com/switchablenorms/CelebAMask-HQ)and [FFHQ](https://github.com/NVlabs/ffhq-dataset) dataset accordingly. For FFHQ datatset, we only use the [images1024x1024](https://drive.google.com/open?id=1tZUcXDBeOibC6jcMCtgRRz67pzrAHeHL)(~ 90GB disk space). We assume the datasets are linked to the `./data` folder.
+
+- CelebAMask-HQ
+
+Make a soft link via `ln -s <donwloaded_CelebAMaskHQ_path> ./data/CelebAMaskHQ`. The RGB images and corresponding facial segmentations are already provided, make sure the folders `./data/CelebAMask-HQ/CelebA-HQ-img` and `./data/CelebAMask-HQ/CelebA-HQ-mask` exist.
+
+- FFHQ
+
+Make a soft link via `ln -s <donwloaded_FFHQ_path> ./data/FFHQ`. Since the facial segmentations are not provided, run `sh scripts/prepare_FFHQ.sh` for the esitimation (will cost some time). After processing, the directory should be:
+```
+data/FFHQ
+├── ffhq_list.txt
+├── images1024
+│   └── 00000
+│       ├── 00000.png
+│       ├── 00001.png
+|       ├── XXXXX.png
+│   └── 01000
+│       ├── 01000.png
+│       ├── 01001.png
+|       ├── XXXXX.png
+│   ...
+├── BiSeNet_mask
+│   └── 00000
+│       ├── 00000.png
+│       ├── 00001.png
+|       ├── XXXXX.png
+│   └── 01000
+│       ├── 01000.png
+│       ├── 01001.png
+|       ├── XXXXX.png
+│   ...
+```
 
 ### 3.2 pre-trained models
 
@@ -134,7 +168,7 @@ If you plan to train the model from scratch, you will need to do a bit more stuf
 
 Please download the pre-trained ckpt(364M) [here](https://drive.google.com/file/d/1EM87UquaoQmk17Q8d5kYIAHqu0dkYqdT/view), and put it in the `pretrained_ckpts/stylegan2` folder.
 
-- Auxiliary model
+- Auxiliary models
 
 We utilitize a pre-trained IR-SE50 model during training to calculate the identity loss, which is taken from [TreB1eN](https://github.com/TreB1eN/InsightFace_Pytorch) repo. Please download it [here](https://drive.google.com/file/d/1KW7bjndL3QG3sxBbZxreGHigcCCpsDgn/view)  accordingly from the following table and put them in the `pretrained_ckpts/auxiliary` folder.
 
@@ -144,9 +178,24 @@ We utilitize a pre-trained IR-SE50 model during training to calculate the identi
 | March    | $420    | -->
 
 ### 3.3 training script
+
+Training on FFHQ in default 8 GPUs settings: 
+```sh
+python  -m torch.distributed.launch \
+        --nproc_per_node=8 \
+        --nnodes=1 \
+        --node_rank=0 \
+        --master_addr=localhost \
+        --master_port=22222 \
+        scripts/train.py
+```
+For more information and supported args, run ` python scripts/train.py -h` for help.
+
 </details>
 
+## <details><summary>4. Optimization</summary>
 
+</details>
 ## 🔗 Citation
 If you find our work useful in your research, please consider citing:
 ```

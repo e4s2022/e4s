@@ -6,7 +6,7 @@ import torch
 import torch.nn as nn
 from torchvision import models
 
-from criteria.lpips.utils import normalize_activation
+from src.criteria.lpips.utils import normalize_activation
 
 
 def get_network(net_type: str):

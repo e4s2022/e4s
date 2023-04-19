@@ -1,4 +1,3 @@
-from utils import torch_utils
 import torchvision.transforms as transforms
 import torch.nn.functional as F
 from tensorboardX import SummaryWriter
@@ -22,8 +21,9 @@ from src.criteria.lpips.lpips import LPIPS
 from src.criteria.adv_loss import AdvDLoss,AdvGLoss,DR1Loss,GPathRegularizer
 from src.criteria.style_loss import StyleLoss
 from src.training.ranger import Ranger
-from src.models.networks import Net, Net2, Net3, NetStage2,MultiScaleNet
+from src.models.networks import Net3
 from src.models.stylegan2.model import Generator,Discriminator
+from src.utils import torch_utils
 
 
 ACCUM = 0.5 ** (32 / (100 * 1000))  #  0.9977843871238888
@@ -84,10 +84,10 @@ class Coach:
                 find_unused_parameters=True
                 )
             
-        # 加载整个模型预训练好的参数，继续训练
+        # resume
         if self.opts.checkpoint_path is not None:
-            ckpt_dict=torch.load(self.opts.checkpoint_path)
-            self.global_step= ckpt_dict["opts"]["max_steps"]+1
+            ckpt_dict = torch.load(self.opts.checkpoint_path)
+            self.global_step = ckpt_dict["opts"]["max_steps"] + 1
             
             if self.opts.dist_train:    
                 self.net.module.latent_avg = ckpt_dict['latent_avg'].to(self.device)
@@ -102,36 +102,7 @@ class Coach:
 
             print("Resume training at step %d..."%self.global_step)            
         
-        # 加载 stage-1 训练好的参数
-        elif self.opts.stage1_checkpoint_path is not None:
-            stage1_ckpt = torch.load(self.opts.stage1_checkpoint_path)
-            
-            if self.opts.dist_train:
-                self.net.module.stage1_net.load_state_dict(torch_utils.remove_module_prefix(stage1_ckpt["state_dict"],prefix="module."))
-                if self.opts.train_D:
-                    self.D.module.load_state_dict(torch_utils.remove_module_prefix(stage1_ckpt["D_state_dict"],prefix="module."))
-                    
-                # avg latent code
-                self.net.module.latent_avg = stage1_ckpt['latent_avg'].to(self.device)    
-                if self.opts.learn_in_w:
-                    self.net.module.latent_avg = self.net.module.latent_avg
-                else:
-                    self.net.module.latent_avg = self.net.module.latent_avg
-            else:
-                self.net.stage1_net.load_state_dict(torch_utils.remove_module_prefix(stage1_ckpt["state_dict"],prefix="module."))
-                if self.opts.train_D:
-                    self.D.load_state_dict(torch_utils.remove_module_prefix(stage1_ckpt["D_state_dict"],prefix="module."))
-                  
-                # avg latent code
-                self.net.latent_avg = stage1_ckpt['latent_avg'].to(self.device)    
-                if self.opts.learn_in_w:
-                    self.net.latent_avg = self.net.latent_avg
-                else:
-                    self.net.latent_avg = self.net.latent_avg
-            
-            print('Loading stage-1 pretrained weights!')
-        
-        # 加载styleGAN预训练权重
+        # load StyleGAN weights
         else:
             styleGAN2_ckpt = torch.load(self.opts.stylegan_weights)
             
@@ -139,9 +110,9 @@ class Coach:
                 self.net.module.G.load_state_dict(styleGAN2_ckpt['g_ema'], strict=False)
                 if self.opts.train_D:
                     if self.opts.out_size == 1024:
-                        self.D.module.load_state_dict(styleGAN2_ckpt['d'], strict=False) # 1024分辨率 可以直接加载
+                        self.D.module.load_state_dict(styleGAN2_ckpt['d'], strict=False) # 1024 resolution
                     else:
-                        self.custom_load_D_state_dict(self.D.module, styleGAN2_ckpt['d'])  # 只加载判别器的部分层
+                        self.custom_load_D_state_dict(self.D.module, styleGAN2_ckpt['d'])  # load partial D
                 # avg latent code
                 self.net.module.latent_avg = styleGAN2_ckpt['latent_avg'].to(self.device)    
                 if self.opts.learn_in_w:
@@ -152,9 +123,9 @@ class Coach:
                 self.net.G.load_state_dict(styleGAN2_ckpt['g_ema'], strict=False)
                 if self.opts.train_D:
                     if self.opts.out_size == 1024:
-                        self.D.load_state_dict(styleGAN2_ckpt['d'], strict=False) # 1024分辨率 可以直接加载
+                        self.D.load_state_dict(styleGAN2_ckpt['d'], strict=False) # 1024 resolution
                     else:
-                        self.custom_load_D_state_dict(self.D, styleGAN2_ckpt['d']) # 只加载判别器的部分层 
+                        self.custom_load_D_state_dict(self.D, styleGAN2_ckpt['d']) # load partial D
                 # avg latent code
                 self.net.latent_avg = styleGAN2_ckpt['latent_avg'].to(self.device)    
                 if self.opts.learn_in_w:
@@ -210,7 +181,7 @@ class Coach:
                                            shuffle=True,
                                            num_workers=int(self.opts.workers),
                                            drop_last=True)
-        # 测试集不要分布式计算
+        # test set
         self.test_dataloader = DataLoader(self.test_dataset,
                                         batch_size=self.opts.test_batch_size,
                                         shuffle=False,
@@ -233,15 +204,14 @@ class Coach:
     
     
     def custom_load_D_state_dict(self, module, state_dict):
-        """导入 styleGAN 预训练判别器 特定层的权值
+        """Load partial StyleGAN discriminator weights
         Args:
-            module (nn.Module): 即将更新参数的module
-            state_dict (): styleGAN 预训练判别器的参数, convs.0对应1024尺度
+            module (nn.Module): the module to be updated
+            state_dict (): styleGAN weights, convs.0 corresponds to 1024 resolution
         """
-        # 开始导入预训练的 ResBlocks 权重
         local_state = {k: v for k, v in module.named_parameters() if v is not None}
 
-        # 因为styleGAN2 的判别器第一层是 1*1 卷积，且输出的通道和分辨率相关，所以这里没办法导入 第一个预训练的conv层权重
+        # 
         del local_state["convs.0.0.weight"]
         del local_state["convs.0.1.bias"]
 
@@ -254,10 +224,10 @@ class Coach:
                 name_in_pretrained = name[:6] + str(layer_idx + idx_gap) + name[7:]
                 new_state_dict[name] = state_dict[name_in_pretrained]
             else:
-                new_state_dict[name] = state_dict[name]  # 最后几层FC
+                new_state_dict[name] = state_dict[name]  # FC
         
         module.load_state_dict(new_state_dict, strict=False)
-        # print(-1)
+        
                 
     def configure_optimizers(self):
         self.params=list(filter(lambda p: p.requires_grad ,list(self.net.parameters())))
@@ -303,7 +273,7 @@ class Coach:
 
     # @torch.no_grad()
     def train(self):
-        self.net.train()  # 这里也会把styleGAN给设置成 train模式了，最好这里判断一下是否是finetune阶段
+        self.net.train()
         if self.opts.train_D:
             self.D.train()
         
@@ -313,40 +283,31 @@ class Coach:
                 
                 img = img.to(self.device).float()
                 mask = (mask*255).long().to(self.device)
-                # [bs,1,H,W]的mask 转成one-hot格式，即[bs,#seg_cls,H,W]
+                # [bs,1,H,W] format mask to one-hot，i.e., [bs,#seg_cls,H,W]
                 onehot = torch_utils.labelMap2OneHot(mask, num_cls=self.opts.num_seg_cls)
-                # onehot_1024 = F.interpolate(onehot, size=(1024,1024), mode='nearest')
                 
-                # ============ 训练D ===============
+                # ============ update D ===============
                 if self.opts.train_D and (self.global_step % self.opts.d_every == 0):
                     torch_utils.requires_grad(self.net, False)
                     torch_utils.requires_grad(self.D, True)
                 
-                    # recon1, recon2, structure_codes, structure_codes_GT, latent  = self.net(img, onehot, return_latents=True)
-                    recon1, structure_codes_GT, latent = self.net(img, onehot, return_latents=True)
-                    
+                    recon1, _, latent = self.net(img, onehot, return_latents=True)
                     fake_pred_1 = self.D(recon1)
-                    # fake_pred_2 = self.D(recon2)
                     real_pred = self.D(img)
                     
-                    # fake_pred = self.D(torch.cat([recon, onehot_1024], dim=1))
-                    # real_pred = self.D(torch.cat([img, onehot_1024], dim=1))
-                    
-                    # d_loss = self.adv_d_loss(real_pred,torch.cat([fake_pred_1,fake_pred_2], dim=0))
                     d_loss = self.adv_d_loss(real_pred,fake_pred_1)
                     
                     d_loss_dict={}
                     d_loss_dict["d_loss"]=float(d_loss)
                     d_loss_dict["real_score"]=float(real_pred.mean())
                     d_loss_dict["fake_score_1"]=float(fake_pred_1.mean())
-                    # d_loss_dict["fake_score_2"]=float(fake_pred_2.mean())
                     
                     self.D.zero_grad()
                     d_loss.backward()
                     self.optimizer_D.step()
                     
                     r1_loss = torch.tensor(0.0, device=self.device)
-                    # 每间隔几次算一次 R1 regularization
+                    # R1 regularization
                     if self.opts.d_reg_every!=-1 and batch_idx % self.opts.d_reg_every==0:
                         img.requires_grad=True
                         
@@ -359,36 +320,29 @@ class Coach:
                         
                     d_loss_dict["r1_loss"] = r1_loss
                 
-                # ============ 训练G ===============
-                # self.opts.train_G 和 self.opts.train_D 要么都是true，要么都是false
-                # 对抗学习的时候训练G,此时的G视为 Encoder + StyleGAN Generator
+                # ============ update G ===============
+                # self.opts.train_G and self.opts.train_D should be both true or false
                 if self.opts.train_G and self.opts.train_D:  
                     torch_utils.requires_grad(self.net, True)
-                    torch_utils.requires_grad(self.net.module.G.style, False)  # z到W 的 mapping参数永远不会更新
+                    torch_utils.requires_grad(self.net.module.G.style, False)  # fix z-to-W mapping of original StyleGAN
                     
-                    # styleGAN的倒数几层不更新
                     if self.opts.remaining_layer_idx != 17:
                         torch_utils.requires_grad(self.net.module.G.convs[-(17-self.opts.remaining_layer_idx):],False)
                         torch_utils.requires_grad(self.net.module.G.to_rgbs[-(17-self.opts.remaining_layer_idx)//2 - 1:],False)
                 
-                # 只训练Encoder
+                # only training Encoder
                 elif not self.opts.train_G and not self.opts.train_D:  
                     torch_utils.requires_grad(self.net.module.G, False)
-                    # torch_utils.requires_grad(self.net.module.stage1_net.G, False)
                 
                 if self.opts.train_D:
                     torch_utils.requires_grad(self.D, False)  
                 
-                # recon1 完全使用style code生成, recon2 使用style code和structure code生成
-                # recon1, recon2, structure_codes, structure_codes_GT, latent = self.net(img, onehot, return_latents=True)    
-                recon1, structure_codes_GT, latent = self.net(img, onehot, return_latents=True)
+                recon1, _, latent = self.net(img, onehot, return_latents=True)
                 
                 g_loss = torch.tensor(0.0, device=self.device)                
                 if self.opts.train_D:
-                    # fake_pred = self.D(torch.cat([recon, onehot_1024], dim=1))
                     fake_pred_1 = self.D(recon1)
-                    # fake_pred_2 = self.D(recon2)
-                    # g_loss = self.adv_g_loss(torch.cat([fake_pred_1,fake_pred_2], dim=0))
+                    
                     g_loss = self.adv_g_loss(fake_pred_1)
                 
                 loss_, loss_dict, id_logs = self.calc_loss(img, recon1, mask, latent)
@@ -397,18 +351,14 @@ class Coach:
                 overall_loss = loss_ + self.opts.g_adv_lambda * g_loss
                 loss_dict["loss"] = float(overall_loss)
                 
-                # if self.rank==0:
-                #     for name, param in self.net.named_parameters():
-                #         if param.requires_grad:
-                #             print('-->name:', name, '--weight', torch.mean(param.data), ' -->grad_value:', torch.mean(param.grad), '-->is_finite', torch.isfinite(param.grad).all()) 
-
+                
                 self.net.zero_grad()
                 overall_loss.backward()
                 self.optimizer.step()
                 
                 # Logging related
                 if self.rank==0 and (self.global_step % self.opts.image_interval == 0 or (self.global_step < 1000 and self.global_step % 25 == 0)):
-                    # imgs_1和imgs_2都是list，每个元素构成一个pair,即 imgs_1[i]和imgs_2[i]是一对图片
+                    
                     imgs = self.parse_images(onehot, img, recon1)
                     self.log_images('images/train/faces', imgs1_data=imgs, subscript=None)
 
@@ -423,7 +373,7 @@ class Coach:
 
                 # Validation related
                 val_loss_dict = None
-                # 验证保存最好的模型
+                # save model
                 if self.rank==0 and (self.global_step % self.opts.val_interval == 0 or self.global_step == self.opts.max_steps):
                     val_loss_dict = self.validate()
                 if self.rank==0 and (val_loss_dict and (self.best_val_loss is None or val_loss_dict['loss'] < self.best_val_loss)):
@@ -441,7 +391,7 @@ class Coach:
                     for param_group in self.optimizer.param_groups:
                         param_group['lr'] = self.opts.learning_rate * 0.1
             
-                # 参数滑动平均
+                # ema
                 if self.opts.dist_train:
                     torch_utils.accumulate(self.net_ema, self.net.module, ACCUM)
                 else:
@@ -521,7 +471,6 @@ class Coach:
                 'input_face': torch_utils.tensor2im(img[i]),
                 'input_mask': torch_utils.tensor2map(mask[i]),
                 'recon_styleCode': torch_utils.tensor2im(recon1[i]),
-                # 'recon_styleCode_feats': torch_utils.tensor2im(recon2[i]),
             }
             im_data.append(cur_im_data)
 
@@ -569,7 +518,7 @@ class Coach:
 
     def validate(self):
         # show_images=False
-        # Logging related 虽然每个epoch都 validate一下，但是每间隔3个epoch再显示图片，防止图片太多了
+        # Logging related 
         if self.global_step % (4*self.opts.val_interval) == 0 or self.global_step == self.opts.max_steps:
             show_images=True
         else:
@@ -586,20 +535,14 @@ class Coach:
             with torch.no_grad():
                 img = img.to(self.device).float()
                 mask = (mask*255).long().to(self.device)
-                # [bs,1,H,W]的mask 转成one-hot格式，即[bs,#seg_cls,H,W]
+                # [bs,1,H,W] format mask to one-hot, i.e., [bs,#seg_cls,H,W]
                 onehot = torch_utils.labelMap2OneHot(mask, num_cls=self.opts.num_seg_cls)
-                # onehot_1024 = F.interpolate(onehot, size=(1024,1024), mode='nearest')
                 
-                # recon1 完全使用style code生成, recon2 使用style code和structure code生成
-                # recon1, recon2, structure_codes, structure_codes_GT, latent = self.net(img, onehot, return_latents=True)
-                recon1, structure_codes_GT, latent = self.net(img, onehot, return_latents=True)    
+                recon1, _, latent = self.net(img, onehot, return_latents=True)    
                               
                 g_loss = torch.tensor(0.0, device=self.device)                
                 if self.opts.train_D:
-                    # fake_pred = self.D(torch.cat([recon, onehot_1024], dim=1))
                     fake_pred_1 = self.D(recon1)
-                    # fake_pred_2 = self.D(recon2)
-                    # g_loss = self.adv_g_loss(torch.cat([fake_pred_1,fake_pred_2], dim=0))
                     g_loss = self.adv_g_loss(fake_pred_1)
                 
                 loss_, loss_dict, id_logs = self.calc_loss(img, recon1, mask, latent)

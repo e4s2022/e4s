@@ -1,8 +1,8 @@
 import torch
 import torch.nn as nn
 
-from criteria.lpips.networks import get_network, LinLayers
-from criteria.lpips.utils import get_state_dict
+from src.criteria.lpips.networks import get_network, LinLayers
+from src.criteria.lpips.utils import get_state_dict
 
 
 class LPIPS(nn.Module):

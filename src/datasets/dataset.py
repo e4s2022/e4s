@@ -254,20 +254,24 @@ class CelebAHQDataset(Dataset):
                  flip_p=-1):  # negative number for no flipping
 
         self.mode = mode
-        self.root = osp.join(dataset_root, self.mode)
+        self.root = dataset_root
         self.img_transform = img_transform
         self.label_transform = label_transform
         self.load_vis_img = load_vis_img
         self.fraction=fraction
         self.flip_p = flip_p
 
-        self.imgs = sorted(make_dataset(osp.join(self.root, "images")))
-        self.imgs= self.imgs[:int(len(self.imgs)*self.fraction)]
+        if mode == "train":
+            self.imgs = sorted([osp.join(self.root, "CelebA-HQ-img", "%d.jpg"%idx) for idx in range(28000)])
+            self.labels = sorted([osp.join(self.root, "CelebA-HQ-mask", "%d.png"%idx) for idx in range(28000)])
+            self.labels_vis =  sorted([osp.join(self.root, "vis", "%d.png"%idx) for idx in range(28000)]) if self.load_vis_img else None
+        else:
+            self.imgs = sorted([osp.join(self.root, "CelebA-HQ-img", "%d.jpg"%idx) for idx in range(28000, 30000)])
+            self.labels = sorted([osp.join(self.root, "CelebA-HQ-mask", "%d.png"%idx) for idx in range(28000, 30000)])
+            self.labels_vis =  sorted([osp.join(self.root, "vis", "%d.png"%idx) for idx in range(28000, 30000)]) if self.load_vis_img else None
 
-        self.labels = sorted(make_dataset(osp.join(self.root, "labels")))
+        self.imgs= self.imgs[:int(len(self.imgs)*self.fraction)]
         self.labels= self.labels[:int(len(self.labels)*self.fraction)]
-        
-        self.labels_vis = sorted(make_dataset(osp.join(self.root, "vis"))) if self.load_vis_img else None
         self.labels_vis= self.labels_vis[:int(len(self.labels_vis)*self.fraction)]  if self.load_vis_img else None
 
         if self.load_vis_img:
@@ -400,3 +404,8 @@ class FFHQDataset(Dataset):
         
         return img, label, label_vis    
 
+
+if __name__ == '__main__':
+    ds = CelebAHQDataset(dataset_root="/mnt/hdd8T/lza/py_projs/e4s/data/CelebAMask-HQ")
+    sample = ds.__getitem__(25)
+    print(-1)
