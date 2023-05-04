@@ -12,3 +12,5 @@ data
 flagged
 
 !./pretrained_ckpts/auxiliray/model.pth
+
+start.sh
