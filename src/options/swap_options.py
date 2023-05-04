@@ -32,7 +32,7 @@ class SwapFacePipelineOptions:
 		self.parser.add_argument('--target_mask', type=str, default="",help='Path to the target mask')
     	
 		self.parser.add_argument('--verbose', default=False, type=bool, help='Whether to show the intermediate results')
-		self.parser.add_argument('--output_dir', type=str, default="/apdcephfs_cq2/share_1290939/branchwang/projects/e4s/example/output/faceswap",help='Path to the target mask')
+		self.parser.add_argument('--output_dir', type=str, default="example/output/faceswap",help='Path to the target mask')
 
 	def parse(self):
 		opts = self.parser.parse_args()

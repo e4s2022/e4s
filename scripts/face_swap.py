@@ -12,8 +12,6 @@ import torchvision.transforms as transforms
 from torch.nn import functional as F
 from skimage.transform import resize
 
-os.sys.path.append('/apdcephfs_cq2/share_1290939/branchwang/projects/e4s')
-
 from src.pretrained.face_vid2vid.driven_demo import init_facevid2vid_pretrained_model, drive_source_demo
 from src.pretrained.gpen.gpen_demo import init_gpen_pretrained_model, GPEN_demo
 from src.pretrained.face_parsing.face_parsing_demo import init_faceParsing_pretrained_model, faceParsing_demo, vis_parsing_maps
@@ -335,17 +333,16 @@ def faceSwapping_pipeline(source, target, opts, save_dir, target_mask=None, need
 
 if __name__ == "__main__":
     opts = SwapFacePipelineOptions().parse()
-    opts.checkpoint_path = '/apdcephfs_cq2/share_1290939/branchwang/projects/pytorch-DDP-demo/iteration_300000.pt'
     # ================= Pre-trained models initilization =========================
     # TODO make a ckpts check in advance
     # face_vid2vid 
-    face_vid2vid_cfg = "/apdcephfs_cq2/share_1290939/branchwang/projects/One-Shot_Free-View_Neural_Talking_Head_Synthesis/config/vox-256.yaml"
-    face_vid2vid_ckpt = "/apdcephfs_cq2/share_1290939/branchwang/projects/One-Shot_Free-View_Neural_Talking_Head_Synthesis/ckpts/00000189-checkpoint.pth.tar"
+    face_vid2vid_cfg = "./pretrained_ckpts/facevid2vid/vox-256.yaml"
+    face_vid2vid_ckpt = "./pretrained_ckpts/facevid2vid/00000189-checkpoint.pth.tar"
     generator, kp_detector, he_estimator, estimate_jacobian = init_facevid2vid_pretrained_model(face_vid2vid_cfg, face_vid2vid_ckpt)
     
     # GPEN 
     gpen_model_params = {
-        "base_dir": "/apdcephfs_cq2/share_1290939/branchwang/projects/GPEN/",  # a sub-folder named <weights> should exist
+        "base_dir": "./pretrained_ckpts/gpen/",  # a sub-folder named <weights> should exist
         "in_size": 512,
         "model": "GPEN-BFR-512", 
         "use_sr": True,
@@ -357,7 +354,7 @@ if __name__ == "__main__":
     GPEN_model = init_gpen_pretrained_model(model_params = gpen_model_params)
 
     # face parsing 
-    faceParsing_ckpt = "/apdcephfs_cq2/share_1290939/branchwang/pretrained_models/face-parsing.PyTorch/79999_iter.pth"
+    faceParsing_ckpt = "./pretrained_ckpts/face_parsing/79999_iter.pth"
     faceParsing_model = init_faceParsing_pretrained_model(faceParsing_ckpt)
     print("Load pre-trained face parsing models success!") 
 
