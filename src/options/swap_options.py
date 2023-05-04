@@ -11,6 +11,7 @@ class SwapFacePipelineOptions:
 		self.parser.add_argument('--num_seg_cls', type=int, default=12,help='Segmentation mask class number')
 		self.parser.add_argument('--train_G', default=True, type=bool, help='Whether to train the model')
 		self.parser.add_argument('--device', default='cuda:0', type=str, help='Which GPU(s) to use')
+		self.parser.add_argument('--lap_bld', action='store_true', help='Whether to use Laplacian multi-band blending')
 		# ================= Model =====================
 		self.parser.add_argument('--out_size', type=int, default=1024, help='output image size') 
 		self.parser.add_argument('--fsencoder_type', type=str, default="psp", help='FS Encode type') 
@@ -31,7 +32,7 @@ class SwapFacePipelineOptions:
 		self.parser.add_argument('--target_mask', type=str, default="",help='Path to the target mask')
     	
 		self.parser.add_argument('--verbose', default=False, type=bool, help='Whether to show the intermediate results')
-		self.parser.add_argument('--output_dir', type=str, default="example/output/faceswap",help='Path to the target mask')
+		self.parser.add_argument('--output_dir', type=str, default="/apdcephfs_cq2/share_1290939/branchwang/projects/e4s/example/output/faceswap",help='Path to the target mask')
 
 	def parse(self):
 		opts = self.parser.parse_args()
