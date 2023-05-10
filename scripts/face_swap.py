@@ -19,7 +19,7 @@ from src.utils.swap_face_mask import swap_head_mask_revisit_considerGlass
 
 from src.utils import torch_utils
 from src.utils.alignmengt import crop_faces, calc_alignment_coefficients
-from src.utils.morphology import dilation
+from src.utils.morphology import dilation, erosion
 from src.utils.multi_band_blending import blending
 
 from src.options.swap_options import SwapFacePipelineOptions
@@ -27,15 +27,25 @@ from src.models.networks import Net3
 from src.datasets.dataset import TO_TENSOR, NORMALIZE, __celebAHQ_masks_to_faceParser_mask_detailed
 
 
-def create_masks(mask, outer_dilation=0):
+def create_masks(mask, outer_dilation=0, operation='dilation'):
+    radius = outer_dilation
     temp = copy.deepcopy(mask)
-    full_mask = dilation(temp, torch.ones(2 * outer_dilation + 1, 2 * outer_dilation + 1, device=mask.device), engine='convolution')
-    border_mask = full_mask - temp
+    if operation == 'dilation':
+        full_mask = dilation(temp, torch.ones(2 * radius + 1, 2 * radius + 1, device=mask.device), engine='convolution')
+        border_mask = full_mask - temp
+    elif operation == 'erosion':
+        full_mask = erosion(temp, torch.ones(2 * radius + 1, 2 * radius + 1, device=mask.device), engine='convolution')
+        border_mask = temp - full_mask
+    # 'expansion' means to obtain a boundary that expands to both sides
+    elif operation == 'expansion':
+        full_mask = dilation(temp, torch.ones(2 * radius + 1, 2 * radius + 1, device=mask.device), engine='convolution')
+        erosion_mask = erosion(temp, torch.ones(2 * radius + 1, 2 * radius + 1, device=mask.device), engine='convolution')
+        border_mask = full_mask - erosion_mask
 
     border_mask = border_mask.clip(0, 1)
     content_mask = mask
     
-    return content_mask, border_mask, full_mask
+    return content_mask, border_mask, full_mask 
 
 def logical_or_reduce(*tensors):
     return torch.stack(tensors, dim=0).any(dim=0)
@@ -268,35 +278,57 @@ def faceSwapping_pipeline(source, target, opts, save_dir, target_mask=None, need
     outer_dilation = 5  
     mask_bg = logical_or_reduce(*[swapped_msk == clz for clz in [0,11, 4    ]])   #For face swapping in video，condisder 4,8,7 as part of background.  11 earings 4 hair 8 neck 7 ear
     is_foreground = torch.logical_not(mask_bg)
+    hole_index = hole_map[None][None] == 255
+    is_foreground[hole_index[None]] = True
     foreground_mask = is_foreground.float()
     
-    content_mask, border_mask, full_mask = create_masks(foreground_mask, outer_dilation = outer_dilation)
+    if opts.lap_bld:
+        content_mask, border_mask, full_mask = create_masks(foreground_mask, outer_dilation=outer_dilation, operation='expansion')
+    else:
+        content_mask, border_mask, full_mask = create_masks(foreground_mask, outer_dilation=outer_dilation)
     
     content_mask = F.interpolate(content_mask, (1024, 1024), mode='bilinear', align_corners=False)
     content_mask_image = Image.fromarray(255*content_mask[0,0,:,:].cpu().numpy().astype(np.uint8))
-    border_mask = F.interpolate(border_mask, (1024, 1024), mode='bilinear', align_corners=False)
     full_mask = F.interpolate(full_mask, (1024, 1024), mode='bilinear', align_corners=False)
     full_mask_image = Image.fromarray(255*full_mask[0,0,:,:].cpu().numpy().astype(np.uint8))
+
+
+    # Paste swapped face onto the target's face
+    if opts.lap_bld:
+        content_mask = content_mask[0, 0, :, :, None].cpu().numpy()
+        border_mask = F.interpolate(border_mask, (1024, 1024), mode='bilinear', align_corners=False)
+        border_mask = border_mask[0, 0, :, :, None].cpu().numpy()
+        border_mask = np.repeat(border_mask, 3, axis=-1)
+
+        swapped_and_pasted = swapped_face_image * content_mask + T * (1 - content_mask)
+        swapped_and_pasted = Image.fromarray(np.uint8(swapped_and_pasted))
+        swapped_and_pasted = Image.fromarray(blending(np.array(T), np.array(swapped_and_pasted), mask=border_mask))
+    else:
+        if outer_dilation == 0:
+            swapped_and_pasted = smooth_face_boundry(swapped_face_image, T, content_mask_image, radius=outer_dilation)
+        else:
+            swapped_and_pasted = smooth_face_boundry(swapped_face_image, T, full_mask_image, radius=outer_dilation)
     
+    # Restore to original image from cropped area
     if only_target_crop:                
         inv_trans_coeffs, orig_image = inv_transforms[0], orig_images[0]
-        pasted_image = paste_image_mask(inv_trans_coeffs, swapped_face_image, orig_image, full_mask_image, radius=outer_dilation)
+        swapped_and_pasted = swapped_and_pasted.convert('RGBA')
+        pasted_image = orig_image.convert('RGBA')
+        swapped_and_pasted.putalpha(255)
+        projected = swapped_and_pasted.transform(orig_image.size, Image.PERSPECTIVE, inv_trans_coeffs, Image.BILINEAR)
+        pasted_image.alpha_composite(projected)
     elif need_crop:                
         inv_trans_coeffs, orig_image = inv_transforms[1], orig_images[1]
-        pasted_image = paste_image_mask(inv_trans_coeffs, swapped_face_image, orig_image, full_mask_image, radius=outer_dilation)
+        swapped_and_pasted = swapped_and_pasted.convert('RGBA')
+        pasted_image = orig_image.convert('RGBA')
+        swapped_and_pasted.putalpha(255)
+        projected = swapped_and_pasted.transform(orig_image.size, Image.PERSPECTIVE, inv_trans_coeffs, Image.BILINEAR)
+        pasted_image.alpha_composite(projected)
     else:
-        # smooth at the face boundary
-        if outer_dilation == 0:
-            pasted_image = smooth_face_boundry(swapped_face_image, T, content_mask_image, radius=outer_dilation)
-        else:
-            pasted_image = smooth_face_boundry(swapped_face_image, T, full_mask_image, radius=outer_dilation)
+        pasted_image = swapped_and_pasted
 
     pasted_image.save(os.path.join(save_dir, result_name))
-    
-    # # Laplacian blending
-    # blend_mask = np.repeat(np.transpose(full_mask[0,:,:,:].cpu().numpy(), axes=(1,2,0)), 3, axis=2) # repeat 3 channels
-    # res = blending(full_img=np.array(pasted_image.convert("RGB")), ori_img=np.array(T), mask=blend_mask)
-    # Image.fromarray(res).save(os.path.join(save_dir,"laplacian.png"))
+
     
 
 if __name__ == "__main__":

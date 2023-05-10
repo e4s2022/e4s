@@ -11,6 +11,7 @@ class SwapFacePipelineOptions:
 		self.parser.add_argument('--num_seg_cls', type=int, default=12,help='Segmentation mask class number')
 		self.parser.add_argument('--train_G', default=True, type=bool, help='Whether to train the model')
 		self.parser.add_argument('--device', default='cuda:0', type=str, help='Which GPU(s) to use')
+		self.parser.add_argument('--lap_bld', action='store_true', help='Whether to use Laplacian multi-band blending')
 		# ================= Model =====================
 		self.parser.add_argument('--out_size', type=int, default=1024, help='output image size') 
 		self.parser.add_argument('--fsencoder_type', type=str, default="psp", help='FS Encode type') 
