@@ -22,6 +22,8 @@
 
 
 ## 🧑‍💻 Changelog
+  - __[2023.05.10]__: Add multi-band blending as #5. 
+
   - __[2023.04.19]__: Add training and optimization script. 
 
   - __[2023.04.16]__: Add face editing inference demo. 
@@ -58,7 +60,7 @@ python scripts/face_swap.py \
       --target_mask=./example/input/faceswap/target_mask.png \
       --verbose=True
 ```
-For more information and supported args, run `python scripts/face_swap.py -h` for help.
+It's recommanded to turn on `--lap_bld` for better result around the face boundary. For more information and supported args, run `python scripts/face_swap.py -h` for help.
 
 ### 2.2 face editing 
 For texture related editting or interpolation, run 
