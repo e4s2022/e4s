@@ -35,3 +35,28 @@ Place these checkpoint files into `pretrained_ckpts/gpen` folder. Alternatively,
 cd pretrained_ckpts/gpen
 sh ./fetch_gpen_models.sh
 ```
+
+After fetching these checkpoints, your `pretrained_ckpts` folder should be same as:
+```sh
+pretrained_ckpts/
+├── auxiliray
+│   ├── model_ir_se50.pth
+│   └── model.pth
+├── e4s
+│   └── iteration_300000.pt
+├── face_parsing
+│   └── 79999_iter.pth
+├── facevid2vid
+│   ├── 00000189-checkpoint.pth.tar
+│   └── vox-256.yaml
+├── gpen
+│   ├── fetch_gepn_models.sh
+│   └── weights
+│       ├── GPEN-BFR-512.pth
+│       ├── ParseNet-latest.pth
+│       ├── realesrnet_x4.pth
+│       └── RetinaFace-R50.pth
+├── put_ckpts_accordingly.txt
+└── stylegan2
+    └── stylegan2-ffhq-config-f.pt
+```
