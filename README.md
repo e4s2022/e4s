@@ -22,6 +22,8 @@
 
 
 ## 🧑‍💻 Changelog
+  - __[2023.05.11]__: Add pre-trained [SegNeXt-FaceParser](https://github.com/e4s2022/SegNeXt-FaceParser). 
+  
   - __[2023.05.10]__: Add multi-band blending as #5. 
 
   - __[2023.04.19]__: Add training and optimization script. 

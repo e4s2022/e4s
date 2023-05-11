@@ -192,7 +192,8 @@ def faceSwapping_pipeline(source, target, opts, save_dir, target_mask=None, need
         crops = [S, T]
     
     S_256, T_256 = [resize(np.array(im)/255.0, (256, 256)) for im in [S,T]]  # 256,[0,1] range
-    T_mask = faceParsing_demo(faceParsing_model, T, convert_to_seg12=True) if target_mask is None else target_mask
+    T_mask = faceParsing_demo(faceParsing_model, T, convert_to_seg12=True, 
+                              model_name = opts.faceParser_name) if target_mask is None else target_mask
     if verbose:
         Image.fromarray(T_mask).save(os.path.join(save_dir,"T_mask.png"))
         T_mask_vis = vis_parsing_maps(T, T_mask)
@@ -211,7 +212,7 @@ def faceSwapping_pipeline(source, target, opts, save_dir, target_mask=None, need
     
 
     # (2) mask of D
-    D_mask = faceParsing_demo(faceParsing_model, D, convert_to_seg12=True)
+    D_mask = faceParsing_demo(faceParsing_model, D, convert_to_seg12=True, model_name = opts.faceParser_name)
     if verbose:
         Image.fromarray(D_mask).save(os.path.join(save_dir,"D_mask.png"))
         D_mask_vis = vis_parsing_maps(D, D_mask) 
@@ -353,9 +354,18 @@ if __name__ == "__main__":
     }
     GPEN_model = init_gpen_pretrained_model(model_params = gpen_model_params)
 
-    # face parsing 
-    faceParsing_ckpt = "./pretrained_ckpts/face_parsing/79999_iter.pth"
-    faceParsing_model = init_faceParsing_pretrained_model(faceParsing_ckpt)
+    # face parser
+    if opts.faceParser_name == "default":
+        faceParser_ckpt = "./pretrained_ckpts/face_parsing/79999_iter.pth"
+        config_path = ""
+    elif opts.faceParser_name == "segnext":
+        faceParser_ckpt = "./pretrained_ckpts/face_parsing/segnext.small.best_mIoU_iter_140000.pth"
+        config_path = "./pretrained_ckpts/face_parsing/segnext.small.512x512.celebamaskhq.160k.py"
+    else:
+        raise NotImplementedError("Please choose a valid face parser," 
+                                  "the current supported models are [ default | segnext ], but %s is given."%opts.faceParser_name)
+        
+    faceParsing_model = init_faceParsing_pretrained_model(opts.faceParser_name, faceParser_ckpt, config_path)
     print("Load pre-trained face parsing models success!") 
 
     # E4S model

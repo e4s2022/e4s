@@ -9,7 +9,7 @@ import os
 import torchvision
 from torch.nn import functional as F
 
-from src.datasets.dataset import __ffhq_masks_to_faceParser_mask_detailed
+from src.datasets.dataset import __ffhq_masks_to_faceParser_mask_detailed, __celebAHQ_masks_to_faceParser_mask_detailed
 from src.pretrained.face_parsing.model import BiSeNet, seg_mean, seg_std
 
 class BicubicDownSample(nn.Module):
@@ -176,22 +176,34 @@ class FaceParser(nn.Module):
 
 
 # ===============================================
-def init_faceParsing_pretrained_model(ckpt_path):
-    parser = FaceParser(seg_ckpt=ckpt_path)
-
-    print("Load faceParsing pre-traiend model success!")
-
+def init_faceParsing_pretrained_model(faceParser_name, ckpt_path, config_path = ""):
+    if faceParser_name == "default":
+        parser = FaceParser(seg_ckpt=ckpt_path)
+    elif faceParser_name == "segnext":
+        from mmseg.apis import init_segmentor
+        parser = init_segmentor(config_path, ckpt_path, device='cuda:0')
+    
     return parser
 
-def faceParsing_demo(model, img, convert_to_seg12=True):
+def faceParsing_demo(model, img, convert_to_seg12=True, model_name = "default"):
     """
     args:
         model (Object): Loaded pretrained model
         img (PIL.Image): [0, 255] PIL.Image
     """
     with torch.no_grad():
-        seg = model(img).cpu().numpy().astype(np.uint8)
+        if model_name == "default":
+            seg = model(img).cpu().numpy().astype(np.uint8)
+            if convert_to_seg12:
+                seg = __ffhq_masks_to_faceParser_mask_detailed(seg)
+        
+        elif model_name == "segnext":
+            from mmseg.apis import inference_segmentor
+            bgr_img = np.array(img)[:,:,::-1]
+            seg = inference_segmentor(model, bgr_img)[0]
+            seg = seg.astype(np.uint8)
+
+            if convert_to_seg12:
+                seg = __celebAHQ_masks_to_faceParser_mask_detailed(seg)
     
-    if convert_to_seg12:
-        seg = __ffhq_masks_to_faceParser_mask_detailed(seg)
     return seg

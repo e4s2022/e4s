@@ -25,7 +25,8 @@ class SwapFacePipelineOptions:
 		self.parser.add_argument('--output_size', default=1024, type=int, help='Output size of generator')
 		self.parser.add_argument('--n_styles', default=18, type=int, help='StyleGAN层数')
 		self.parser.add_argument('--checkpoint_path', default='./pretrained_ckpts/e4s/iteration_300000.pt', type=str, help='Path to E4S pre-trained model checkpoint')
-
+		self.parser.add_argument('--faceParser_name', default='default', type=str, help='face parser name, [ default | segnext] is currently supported.')
+		
 		# ================== input & output ==================
 		self.parser.add_argument('--source', type=str, default="example/input/faceswap/source.jpg",help='Path to the source image')
 		self.parser.add_argument('--target', type=str, default="example/input/faceswap/target.jpg",help='Path to the target image')

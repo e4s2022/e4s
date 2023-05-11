@@ -31,7 +31,7 @@ class Editor:
         self.net.latent_avg = ckpt_dict['latent_avg'].to(self.opts.device) if self.opts.start_from_latent_avg else None
         self.net.load_state_dict(torch_utils.remove_module_prefix(ckpt_dict["state_dict"],prefix="module."))
         
-        self.faceParsing_model = init_faceParsing_pretrained_model(self.opts.faceParsing_ckpt)
+        self.faceParsing_model = init_faceParsing_pretrained_model(self.opts.faceParser_name, self.opt.faceParsing_ckpt, self.opt.segnext_config)
         
         print("Load pre-trained weights.")    
 
@@ -55,7 +55,7 @@ class Editor:
     def interpolation(self):
         # =========== For source =============
         src_img = Image.open(self.opts.source).convert("RGB").resize((1024,1024))
-        src_label_map = faceParsing_demo(self.faceParsing_model, src_img, convert_to_seg12=True)
+        src_label_map = faceParsing_demo(self.faceParsing_model, src_img, convert_to_seg12=True, model_name=self.opts.faceParser_name)
         # wrap data 
         src = transforms.Compose([TO_TENSOR, NORMALIZE])(src_img)
         src = src.to(self.opts.device).float().unsqueeze(0)
@@ -67,7 +67,7 @@ class Editor:
 
         # =========== For reference =============
         ref_img = Image.open(self.opts.reference).convert("RGB").resize((1024,1024))
-        ref_label_map = faceParsing_demo(self.faceParsing_model, ref_img, convert_to_seg12=True)
+        ref_label_map = faceParsing_demo(self.faceParsing_model, ref_img, convert_to_seg12=True, model_name=self.opts.faceParser_name)
         # wrap data
         ref = transforms.Compose([TO_TENSOR, NORMALIZE])(ref_img)
         ref = ref.to(self.opts.device).float().unsqueeze(0)

@@ -18,7 +18,9 @@ class EditOptions:
 		
 		self.parser.add_argument('--output_size', default=1024, type=int, help='Output size of generator')
 		self.parser.add_argument('--checkpoint_path', default='./pretrained_ckpts/e4s/iteration_300000.pt', type=str, help='Path to pre-trained E4S model checkpoint')
+		self.parser.add_argument('--faceParser_name', default='default', type=str, help='face parser name, [ default | segnext] is currently supported.')
 		self.parser.add_argument('--faceParsing_ckpt', default='./pretrained_ckpts/face_parsing/79999_iter.pth', type=str, help='Path to pre-trained faceParsing model checkpoint')
+		self.parser.add_argument('--segnext_config', default='', type=str, help='Path to pre-trained SegNeXt faceParser configuration file, this option is valid when --faceParsing_ckpt=segenext')
 		self.parser.add_argument('--device', default='cuda:0', type=str, help='Which GPU(s) to use')
 
 		self.parser.add_argument('--start_from_latent_avg', action='store_true',default=True, help='Whether to add average latent vector to generate codes from encoder.')

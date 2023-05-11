@@ -18,7 +18,7 @@ class DemoHelper:
         self.opt = EditOptions().parse()
 
         # initialize the pre-trained models
-        self.faceParsing_model = init_faceParsing_pretrained_model(self.opt.faceParsing_ckpt)
+        self.faceParsing_model = init_faceParsing_pretrained_model(self.opts.faceParser_name, self.opt.faceParsing_ckpt, self.opt.segnext_config)
         assert self.opt.faceParsing_ckpt is not None, "please fetch the pre-trained faceParsing model checkpoint!"
         
         # RGI model
@@ -57,7 +57,7 @@ class DemoHelper:
             self.noise.append(torch.randn(1,channels[i],i,i).to(self.opt.device))
 
     def esitmate_mask(self, image):
-        label_map = faceParsing_demo(self.faceParsing_model, image, convert_to_seg12=True)
+        label_map = faceParsing_demo(self.faceParsing_model, image, convert_to_seg12=True, model_name = self.opts.faceParser_name)
         
         return label_map
     

@@ -158,6 +158,14 @@ def __celebAHQ_masks_to_faceParser_mask_detailed(celebA_mask):
     Return:
         aggrigated mask, with same shape [H,W] but the number of segmentation classes is less
     """
+    # 19 attributes in total, skin-1,nose-2,...cloth-18, background-0
+    celelbAHQ_label_list = ['skin', 'nose', 'eye_g', 'l_eye', 'r_eye',
+                            'l_brow', 'r_brow', 'l_ear', 'r_ear', 'mouth',
+                            'u_lip', 'l_lip', 'hair', 'hat', 'ear_r',
+                            'neck_l', 'neck', 'cloth']# 12 attributes with left-right aggrigation
+    faceParser_label_list_detailed = ['background', 'lip', 'eyebrows', 'eyes', 'hair', 
+                                    'nose', 'skin', 'ears', 'belowface', 'mouth', 
+                                  'eye_glass', 'ear_rings']
 
     converted_mask = np.zeros_like(celebA_mask)
 
