@@ -62,7 +62,11 @@ python scripts/face_swap.py \
       --target_mask=./example/input/faceswap/target_mask.png \
       --verbose=True
 ```
-It's recommanded to turn on `--lap_bld` for better result around the face boundary. For more information and supported args, run `python scripts/face_swap.py -h` for help.
+It's recommanded to turn on `--lap_bld` for better result around the face boundary. 
+
+Feel free to use different pre-trained face parser by `--faceParser_name` option, `[default | segnext]` is currently supported. Don't forget to fetch the corresponding ckpts before use.
+
+For more information and supported args, run `python scripts/face_swap.py -h` for help.
 
 ### 2.2 face editing 
 For texture related editting or interpolation, run 
