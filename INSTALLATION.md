@@ -53,21 +53,25 @@ Make sure to place these checkpoint files in `pretrained_ckpts/gpen/weights` fol
 After fetching these checkpoints, your `pretrained_ckpts` folder should be same as:
 ```sh
 pretrained_ckpts/
-├── auxiliray
+├── auxiliray (optional for training)
 │   ├── model_ir_se50.pth
 │   └── model.pth
 ├── e4s
 │   └── iteration_300000.pt
 ├── face_parsing
 │   ├── 79999_iter.pth
+│   ├── segnext.tiny.512x512.celebamaskhq.160k.py
+│   ├── segnext.tiny.best_mIoU_iter_160000.pth (optional)
 │   ├── segnext.base.512x512.celebamaskhq.160k.py
 │   ├── segnext.base.best_mIoU_iter_140000.pth (optional)
 │   ├── segnext.small.512x512.celebamaskhq.160k.py
-│   └── segnext.small.best_mIoU_iter_140000.pth (optional)
-├── facevid2vid (optional)
+│   ├── segnext.small.best_mIoU_iter_140000.pth (optional)
+│   ├── segnext.large.512x512.celebamaskhq.160k.py
+│   └── segnext.large.best_mIoU_iter_150000.pth (optional)
+├── facevid2vid
 │   ├── 00000189-checkpoint.pth.tar
 │   └── vox-256.yaml
-├── gpen (optional)
+├── gpen
 │   ├── fetch_gepn_models.sh
 │   └── weights
 │       ├── GPEN-BFR-512.pth
@@ -75,6 +79,6 @@ pretrained_ckpts/
 │       ├── realesrnet_x4.pth
 │       └── RetinaFace-R50.pth
 ├── put_ckpts_accordingly.txt
-└── stylegan2
+└── stylegan2 (optional for training)
     └── stylegan2-ffhq-config-f.pt
 ```
