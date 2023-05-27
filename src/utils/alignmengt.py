@@ -185,7 +185,7 @@ def crop_faces(IMAGE_SIZE, files, scale, center_sigma=0.0, xy_sigma=0.0, use_fa=
     else:
         import dlib
         fa = None
-        predictor = dlib.shape_predictor("/apdcephfs/share_1290939/zhianliu/pretrained_models/STIT/pretrained_models/shape_predictor_68_face_landmarks.dat")
+        predictor = dlib.shape_predictor("./pretrained_ckpts/shape_predictor_68_face_landmarks.dat")
         detector = dlib.get_frontal_face_detector()
 
     cs, xs, ys = [], [], []

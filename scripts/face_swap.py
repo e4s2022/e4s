@@ -383,6 +383,8 @@ if __name__ == "__main__":
     else:
         target_mask_seg12 = None
     
+    # NOTICE !!!
+    # Please consider the `need_crop` parameter accordingly for your test case, default with well aligned faces
     faceSwapping_pipeline(opts.source, opts.target, opts, save_dir=opts.output_dir, 
                           target_mask = target_mask_seg12, need_crop = False, verbose = opts.verbose) 
     

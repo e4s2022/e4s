@@ -32,7 +32,13 @@ This face reenactment model is applied to drive source face to show similar pose
 
 #### 1.3.3 GPEN: [paper](https://arxiv.org/abs/2105.06070) | [repo](https://github.com/yangxy/GPEN)
 
-A face restoration model ([GPEN](https://github.com/yangxy/GPEN)) is used to improve the resolution of the intermediate driven face. You need to download some pre-trained models as follows:
+A face restoration model ([GPEN](https://github.com/yangxy/GPEN)) is used to improve the resolution of the intermediate driven face. You can execute the following script to fetch them automatically:
+```sh
+cd pretrained_ckpts/gpen
+sh ./fetch_gpen_models.sh
+```
+
+Alternatively, you can download the pre-trained models manually as follows:
 
 | Model | download link |
 | - | - |
@@ -41,11 +47,7 @@ A face restoration model ([GPEN](https://github.com/yangxy/GPEN)) is used to imp
 | GPEN-BFR-512 | https://public-vigen-video.oss-cn-shanghai.aliyuncs.com/robin/models/GPEN-BFR-512.pth, GEPN pre-trained model |
 | ParseNet | https://public-vigen-video.oss-cn-shanghai.aliyuncs.com/robin/models/ParseNet-latest.pth, for face parsing |
 
-Place these checkpoint files into `pretrained_ckpts/gpen` folder. Alternatively, you can execute the following script to fetch them automatically:
-```sh
-cd pretrained_ckpts/gpen
-sh ./fetch_gpen_models.sh
-```
+Make sure to place these checkpoint files in `pretrained_ckpts/gpen/weights` folder. 
 
 ## 2. Sanity check
 After fetching these checkpoints, your `pretrained_ckpts` folder should be same as:
