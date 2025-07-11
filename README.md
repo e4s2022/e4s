@@ -47,7 +47,7 @@ Please check the [installation Doc](./INSTALLATION.md) for the guidance.
 ### 2.1 face swapping 
 #### Face swapping in defult settings:
 ```sh
-python scripts/face_swap.py --source=example/input/faceswap/source.jpg --target=example/input/faceswap/target.jpg
+PYTHONPATH=. python scripts/face_swap.py --source=example/input/faceswap/source.jpg --target=example/input/faceswap/target.jpg
 ```
 The reuslts will be saved to `example/output/faceswap` folder. Left to right: source, target, swapped face
 

@@ -79,6 +79,7 @@ dependencies:
   - xz=5.2.10=h5eee18b_1
   - zlib=1.2.13=h5eee18b_0
   - zstd=1.5.4=hc292b87_0
+  - libstdcxx-ng-13.2.0
   - pip:
     - contourpy==1.0.7
     - cycler==0.11.0
@@ -105,5 +106,6 @@ dependencies:
     - tensorboardx==2.6
     - tifffile==2023.3.21
     - tqdm==4.65.0
+    - ninja-1.11.1.4
     - zipp==3.15.0
 prefix: /home/lza/miniconda3/envs/e4s

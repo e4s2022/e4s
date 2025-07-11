@@ -11,6 +11,6 @@ data
 
 flagged
 
-!pretrained_ckpts/auxiliray/model.pth
-
+pretrained_ckpts/auxiliray/model.pth
+*.png
 start.sh
